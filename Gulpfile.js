@@ -13,7 +13,7 @@ var gulp = require("gulp"),
     zip = require("gulp-zip"),
     del = require("del"),
     newer = require("gulp-newer"),
-    gutil = require("gulp-util"),
+    acolors = require("ansi-colors"),
     gulpif = require("gulp-if"),
     jsonTransform = require("gulp-json-transform"),
     intercept = require("gulp-intercept"),
@@ -37,12 +37,19 @@ gulp.task("clean", function () {
     ], { force: true });
 });
 
-gulp.task("compress", ["clean"], function () {
+gulp.task("compress", gulp.series("clean", function () {
     return gulp.src("src/**/*")
         .pipe(zip(pkg.name + ".mpk"))
         .pipe(gulp.dest(paths.TEST_WIDGETS_FOLDER))
         .pipe(gulp.dest("dist"));
-});
+}));
+
+//  gulp.task("compress", ["clean"], function () {
+//     return gulp.src("src/**/*")
+//         .pipe(zip(pkg.name + ".mpk"))
+//         .pipe(gulp.dest(paths.TEST_WIDGETS_FOLDER))
+//         .pipe(gulp.dest("dist"));
+// }); 
 
 gulp.task("copy:js", function () {
     return gulp.src(["./src/**/*.js"])
@@ -68,10 +75,10 @@ gulp.task("version:json", function () {
 
 gulp.task("icon", function (cb) {
     var icon = (typeof argv.file !== "undefined") ? argv.file : "./icon.png";
-    console.log("\nUsing this file to create a base64 string: " + gutil.colors.cyan(icon));
+    console.log("\nUsing this file to create a base64 string: " + acolors.cyan(icon));
     gulp.src(icon)
         .pipe(intercept(function (file) {
-            console.log("\nCopy the following to your " + pkg.name + ".xml (after description):\n\n" + gutil.colors.cyan("<icon>") + file.contents.toString("base64") + gutil.colors.cyan("<\/icon>") + "\n");
+            console.log("\nCopy the following to your " + pkg.name + ".xml (after description):\n\n" + acolors.cyan("<icon>") + file.contents.toString("base64") + acolors.cyan("<\/icon>") + "\n");
             cb();
         }));
 });
@@ -84,5 +91,5 @@ gulp.task("modeler", function (cb) {
     widgetBuilderHelper.runmodeler(MODELER_PATH, MODELER_ARGS, paths.TEST_PATH, cb);
 });
 
-gulp.task("build", ["compress"]);
-gulp.task("version", ["version:xml", "version:json"]);
+gulp.task("build", gulp.series("compress"));
+gulp.task("version", gulp.series("version:xml", "version:json"));
